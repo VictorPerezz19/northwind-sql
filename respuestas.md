@@ -102,7 +102,7 @@ WHERE
 
 ![alt text](img\pregunta-3.png)
 
-**Comentario:** He filtrado con discontinued = 0 para ver solo los activos y he comparado directamente units_in_stock <= reorder_level para sacar los que tienen poco stock. Por último, añadí un CASE WHEN para ponerle la etiqueta 'CRÍTICO' a los que están a 0 y 'AVISO' a los demás.
+**Comentario:** He usado discontinued = 0 para ver solo los activos y he comparado units_in_stock <= reorder_level para sacar los que tienen poco stock. Por último, añadí un CASE WHEN para ponerle la etiqueta 'CRÍTICO' a los que están a 0 y 'AVISO' a los demás.
 
 ## Pregunta 4 — Ficha completa de producto
 
@@ -120,14 +120,28 @@ Para los productos suministrados por empresas de **Italia, Francia o España**, 
 **Consulta:**
 
 ```sql
-
+SELECT
+	P.PRODUCT_NAME AS PRODUCTO,
+	C.CATEGORY_NAME AS CATEGORIA,
+	S.COMPANY_NAME AS PROVEEDOR,
+	S.COUNTRY AS PAIS,
+	S.CITY AS CIUDAD
+FROM
+	PRODUCTS P
+	INNER JOIN CATEGORIES C ON P.CATEGORY_ID = C.CATEGORY_ID
+	INNER JOIN SUPPLIERS S ON P.SUPPLIER_ID = S.SUPPLIER_ID
+WHERE
+	S.COUNTRY IN ('Italy', 'France', 'Spain')
+ORDER BY
+	PAIS,
+	PRODUCTO;
 ```
 
 **Resultado:**
 
-!Resultado pregunta 7
+![alt text](img\pregunta-4.png)
 
-**Comentario:** He usado `COUNT(o.order_id)` en lugar de `COUNT(*)` porque...
+**Comentario:** He usado INNER JOIN para unir tres tablas: products como tabla central, conectándola con categories (para sacar el nombre de la categoría) y con suppliers (para sacar los datos del proveedor y el país). Para filtrar los países de golpe usé WHERE, IN, y finalmente ordené por país y luego por producto con ORDER BY.
 
 ## Pregunta 5 — Detalle valorizado de un pedido
 
@@ -145,14 +159,31 @@ Muestra, para ese pedido, el nombre del producto, el precio unitario aplicado, l
 **Consulta:**
 
 ```sql
-
+SELECT
+	C.COMPANY_NAME AS CLIENTE,
+	O.ORDER_DATE AS FECHA_PEDIDO,
+	P.PRODUCT_NAME AS PRODUCTO,
+	ROUND(OD.UNIT_PRICE::NUMERIC, 2) AS PRECIO_UNITARIO,
+	OD.QUANTITY AS CANTIDAD,
+	OD.DISCOUNT AS DESCUENTO,
+	ROUND(
+		(OD.UNIT_PRICE * OD.QUANTITY * (1 - OD.DISCOUNT))::NUMERIC,
+		2
+	) AS IMPORTE_LINEA
+FROM
+	ORDERS O
+	INNER JOIN CUSTOMERS C USING (CUSTOMER_ID)
+	INNER JOIN ORDER_DETAILS OD USING (ORDER_ID)
+	INNER JOIN PRODUCTS P USING (PRODUCT_ID)
+WHERE
+	ORDER_ID = 10248;
 ```
 
 **Resultado:**
 
-!Resultado pregunta 7
+![alt text](img\pregunta-5.png)
 
-**Comentario:** He usado `COUNT(o.order_id)` en lugar de `COUNT(*)` porque...
+**Comentario:** He unido 4 tablas usando INNER JOIN y USING para no usar el ON ya que las claves se llaman igual en ambas tablas. Para evitar errores, le he puesto el alias od a unit_price, porque esa columna existe tanto en productos como en detalles del pedido y SQL necesita saber cuál coger. El importe de la línea lo saqué multiplicando el precio por la cantidad y restándole el descuento (1 - descuento), redondeando el resultado final a dos decimales, utilice, a parte de esto he especificado od.unit_price en lugar de poner solo unit_price. Esto es vital porque la base de datos guarda el precio actual en la tabla products y el precio histórico en la tabla order_details. Si indico de qué tabla sacar el precio od me sale un error de duplicado de tablas, además, utilice od ya que se refiere a un precio de hace tiempo, no acctual sino habría utilizado p (el uso de numeric y de round lo explico en los ejercicios anteriores).
 
 ## Pregunta 6 — Ranking de categorías por facturación
 
@@ -170,14 +201,31 @@ Calcula la facturación total de cada categoría durante toda la historia de la 
 **Consulta:**
 
 ```sql
-
+SELECT
+	C.CATEGORY_NAME AS CATEGORIA,
+	COUNT(OD.ORDER_ID) AS NUM_LINEAS,
+	COUNT(DISTINCT OD.PRODUCT_ID) AS NUM_PRODUCTOS,
+	ROUND(
+		SUM(OD.UNIT_PRICE * OD.QUANTITY * (1 - OD.DISCOUNT))::NUMERIC,
+		2
+	) AS FACTURACION
+FROM
+	CATEGORIES C
+	INNER JOIN PRODUCTS P USING (CATEGORY_ID)
+	INNER JOIN ORDER_DETAILS OD USING (PRODUCT_ID)
+GROUP BY
+	C.CATEGORY_NAME
+HAVING
+	SUM(OD.UNIT_PRICE * OD.QUANTITY * (1 - OD.DISCOUNT)) > 100000
+ORDER BY
+	FACTURACION DESC;
 ```
 
 **Resultado:**
 
-!Resultado pregunta 7
+![alt text](img\pregunta-6.png)
 
-**Comentario:** He usado `COUNT(o.order_id)` en lugar de `COUNT(*)` porque...
+**Comentario:** He unido las tablas de categorías, productos y detalles de pedidos usando USING. Agrupé por categoría para poder calcular la facturación con SUM, y usé COUNT(DISTINCT od.product_id) para contar solo los productos diferentes vendidos, sin repetir. Para filtrar las que superan los 100.000€, tuve que copiar lo mismo en el HAVING. Por ultimo hice un ORDER BY de mayor a menor facturación.  
 
 ## Pregunta 7 — Clientes sin actividad comercial
 
@@ -195,14 +243,26 @@ Lista **todos** los clientes con el número de pedidos que ha realizado cada uno
 **Consulta:**
 
 ```sql
-
+SELECT
+	C.COMPANY_NAME AS CLIENTE,
+	C.COUNTRY AS PAIS,
+	COUNT(O.ORDER_ID) AS NUM_PEDIDOS,
+	COALESCE(MAX(O.ORDER_DATE)::TEXT, 'SIN PEDIDOS') AS ULTIMO_PEDIDO
+FROM
+	CUSTOMERS C
+	LEFT JOIN ORDERS O USING (CUSTOMER_ID)
+GROUP BY
+	C.COMPANY_NAME,
+	C.COUNTRY
+ORDER BY
+	NUM_PEDIDOS ASC;
 ```
 
 **Resultado:**
 
-!Resultado pregunta 7
+![alt text](img\pregunta-7.png)
 
-**Comentario:** He usado `COUNT(o.order_id)` en lugar de `COUNT(*)` porque...
+**Comentario:** He usado LEFT JOIN para traerme los clientes, hayan comprado o no. Aunque esto genera valores null, utilizando COUNT(o.order_id) hago que los nulos se conviertan en un 0. Para sacar el último pedido usé MAX(o.order_date) y le añadí ::text para convertir esa fecha en texto; así, COALESCE me deja ocultar el nulo sobrescribiéndolo con la frase 'SIN PEDIDOS' sin dar error de tipos. Por último, usé ORDER BY num_pedidos ASC para que los de 0 salgan arriba del todo, esto se puede hacer tambien con CASE WHEN pero con COALESCE es mas rapido.
 
 ## Pregunta 8 — Organigrama de la fuerza de ventas
 
@@ -220,14 +280,24 @@ Muestra cada empleado con su nombre completo, su cargo, el nombre completo de la
 **Consulta:**
 
 ```sql
-
+SELECT
+	E.FIRST_NAME || ' ' || E.LAST_NAME AS EMPLEADO,
+	E.TITLE AS CARGO,
+	COALESCE(
+		J.FIRST_NAME || ' ' || J.LAST_NAME,
+		'DIRECCIÓN GENERAL'
+	) AS RESPONSABLE,
+	COALESCE(J.TITLE, 'DIRECCIÓN GENERAL') AS CARGO_RESPONSABLE
+FROM
+	EMPLOYEES E
+	LEFT JOIN EMPLOYEES J ON E.REPORTS_TO = J.EMPLOYEE_ID;
 ```
 
 **Resultado:**
 
-!Resultado pregunta 7
+![alt text](img\pregunta-8.png)
 
-**Comentario:** He usado `COUNT(o.order_id)` en lugar de `COUNT(*)` porque...
+**Comentario:** Para esta consulta he hecho un SELF JOIN, crucé la tabla employees consigo misma, las he unido igualando e.reports_to con j.employee_id. He usado LEFT JOIN para que el jefe supremo no desaparezca al no tener a nadie por encima. Para juntar el nombre y el apellido he usado el operador ||, y he envuelto los datos del jefe en un COALESCE para que, cuando devuelva nulo, escriba 'DIRECCIÓN GENERAL'.
 
 ## Pregunta 9 — Rejilla de cobertura categoría × año
 
@@ -245,14 +315,57 @@ Genera todas las combinaciones posibles de las 8 categorías con los 3 años del
 **Consulta:**
 
 ```sql
-
+SELECT
+	C.CATEGORY_NAME AS CATEGORIA,
+	Y.ANIO,
+	COALESCE(VENTAS.FACTURACION, 0) AS FACTURACION
+FROM
+	CATEGORIES C
+	CROSS JOIN (
+		SELECT DISTINCT
+			EXTRACT(
+				YEAR
+				FROM
+					ORDER_DATE
+			) AS ANIO
+		FROM
+			ORDERS
+	) Y
+	LEFT JOIN (
+		SELECT
+			P.CATEGORY_ID,
+			EXTRACT(
+				YEAR
+				FROM
+					O.ORDER_DATE
+			) AS ANIO,
+			ROUND(
+				SUM(OD.UNIT_PRICE * OD.QUANTITY * (1 - OD.DISCOUNT))::NUMERIC,
+				2
+			) AS FACTURACION
+		FROM
+			ORDERS O
+			INNER JOIN ORDER_DETAILS OD USING (ORDER_ID)
+			INNER JOIN PRODUCTS P USING (PRODUCT_ID)
+		GROUP BY
+			P.CATEGORY_ID,
+			EXTRACT(
+				YEAR
+				FROM
+					O.ORDER_DATE
+			)
+	) VENTAS ON C.CATEGORY_ID = VENTAS.CATEGORY_ID
+	AND Y.ANIO = VENTAS.ANIO
+ORDER BY
+	CATEGORIA,
+	ANIO;
 ```
 
 **Resultado:**
 
-!Resultado pregunta 7
+![alt text](img\pregunta-9.png)
 
-**Comentario:** He usado `COUNT(o.order_id)` en lugar de `COUNT(*)` porque...
+**Comentario:** Primero, he creado usado CROSS JOIN en la tabla de categorías y consulta que saca los 3 años distintos usando EXTRACT(YEAR FROM) Esto genera 8 categorías × 3 años. Después, he calculado la facturación haciendo una subconsulta llamada ventas. Finalmente luego he usado el LEFT JOIN. Al hacerlo en este orden, las combinaciones que no tuvieron ventas se quedan con la celda vacía (NULL), por eso hago el COALESCE para que no desaparezcan los que tengan null.
 
 ## Pregunta 10 — Mapa de países: clientes frente a proveedores
 
@@ -270,14 +383,33 @@ Donde `tipo_presencia` toma los valores `'SOLO CLIENTES'`, `'SOLO PROVEEDORES'` 
 **Consulta:**
 
 ```sql
-
+SELECT 
+    COALESCE(c.country, p.country) AS pais,
+    COALESCE(c.num_clientes, 0) AS num_clientes,
+    COALESCE(p.num_proveedores, 0) AS num_proveedores,
+    CASE 
+        WHEN c.country IS NULL THEN 'SOLO PROVEEDORES'
+        WHEN p.country IS NULL THEN 'SOLO CLIENTES'
+        ELSE 'AMBOS'
+    END AS tipo_presencia
+FROM 
+    (SELECT country, COUNT(customer_id) AS num_clientes 
+     FROM customers 
+     GROUP BY country) c
+FULL JOIN 
+    (SELECT country, COUNT(supplier_id) AS num_proveedores 
+     FROM suppliers 
+     GROUP BY country) p 
+ON c.country = p.country
+ORDER BY 
+    pais;
 ```
 
 **Resultado:**
 
-!Resultado pregunta 7
+![alt text](img\pregunta-10.png)
 
-**Comentario:** He usado `COUNT(o.order_id)` en lugar de `COUNT(*)` porque...
+**Comentario:** Hicé un FULL JOIN para conservar todos los países. use COALESCE(c.country, p.country) para coger el nombre del país sin importar de qué subconsulta venga, evitando que el campo quede vacío, y usé la misma función para convertir los conteos nulos en ceros. Por último, utilicé un CASE WHEN que dice de qué lado falta el país (IS NULL) para etiquetar automáticamente el tipo de presencia como 'SOLO CLIENTES', 'SOLO PROVEEDORES' o 'AMBOS'. Se podria haber hecho sin el FULL JOIN pero habría tenido que usar COUNT DISTINCT.
 
 ## Pregunta 11 — Directorio unificado de contactos
 
@@ -302,7 +434,7 @@ Ordena por origen y luego por país.
 
 **Resultado:**
 
-!Resultado pregunta 7
+![alt text](img\pregunta-11.png)
 
 **Comentario:** He usado `COUNT(o.order_id)` en lugar de `COUNT(*)` porque...
 
@@ -332,7 +464,7 @@ Ordena ambos resultados alfabéticamente.
 
 **Resultado:**
 
-!Resultado pregunta 7
+![alt text](img\pregunta-12.png)
 
 **Comentario:** He usado `COUNT(o.order_id)` en lugar de `COUNT(*)` porque...
 
@@ -357,7 +489,7 @@ Localiza los clientes que **nunca** han incluido un producto de la categoría `'
 
 **Resultado:**
 
-!Resultado pregunta 7
+![alt text](img\pregunta-13.png)
 
 **Comentario:** He usado `COUNT(o.order_id)` en lugar de `COUNT(*)` porque...
 
@@ -382,7 +514,7 @@ Muestra los productos activos cuyo precio unitario supere el precio medio de **t
 
 **Resultado:**
 
-!Resultado pregunta 7
+![alt text](img\pregunta-14.png)
 
 **Comentario:** He usado `COUNT(o.order_id)` en lugar de `COUNT(*)` porque...
 
@@ -409,7 +541,7 @@ El cálculo tiene dos niveles: primero hay que obtener el importe de cada pedido
 
 **Resultado:**
 
-!Resultado pregunta 7
+![alt text](img\pregunta-15.png)
 
 **Comentario:** He usado `COUNT(o.order_id)` en lugar de `COUNT(*)` porque...
 
@@ -436,7 +568,7 @@ Resuélvelo con una **subconsulta correlacionada**: para cada producto, comprueb
 
 **Resultado:**
 
-!Resultado pregunta 7
+![alt text](img\pregunta-16.png)
 
 **Comentario:** He usado `COUNT(o.order_id)` en lugar de `COUNT(*)` porque...
 
@@ -466,7 +598,7 @@ Usando expresiones de tabla común (CTE), construye una consulta que:
 
 **Resultado:**
 
-!Resultado pregunta 7
+![alt text](img\pregunta-17.png)
 
 **Comentario:** He usado `COUNT(o.order_id)` en lugar de `COUNT(*)` porque...
 
@@ -496,7 +628,7 @@ Incluye además una columna con la posición global del producto en el conjunto 
 
 **Resultado:**
 
-!Resultado pregunta 7
+![alt text](img\pregunta-18.png)
 
 **Comentario:** He usado `COUNT(o.order_id)` en lugar de `COUNT(*)` porque...
 
@@ -530,7 +662,7 @@ Para cada mes de 1997, calcula:
 
 **Resultado:**
 
-!Resultado pregunta 7
+![alt text](img\pregunta-19.png)
 
 **Comentario:** He usado `COUNT(o.order_id)` en lugar de `COUNT(*)` porque...
 
@@ -560,6 +692,6 @@ Incluye además una columna que indique el peso de cada categoría sobre la fact
 
 **Resultado:**
 
-!Resultado pregunta 7
+![alt text](img\pregunta-20.png)
 
 **Comentario:** He usado `COUNT(o.order_id)` en lugar de `COUNT(*)` porque...
