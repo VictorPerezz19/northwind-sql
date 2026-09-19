@@ -13,14 +13,23 @@ Obtén los productos que **no** están descatalogados y cuyo precio unitario est
 **Consulta:**
 
 ```sql
-
+SELECT
+	PRODUCT_NAME AS PRODUCTO,
+	ROUND(UNIT_PRICE::NUMERIC, 2) AS PRECIO
+FROM
+	PRODUCTS
+WHERE
+	DISCONTINUED = 0
+	AND UNIT_PRICE BETWEEN 10 AND 50
+ORDER BY
+	PRECIO DESC;
 ```
 
 **Resultado:**
 
-!Resultado pregunta 7
+![imagen resultado](img\pregunta-1.png)
 
-**Comentario:** He usado `COUNT(o.order_id)` en lugar de `COUNT(*)` porque...
+**Comentario:** He usado ROUND(::numeric, 2) para redondear a dos decimales y cambiar el tipo y discontinued = 0 para ver si esta descatalogado. Para el rango de precios usé BETWEEN y ORDER BY DESC para ordenarlo de mayor a menor.
 
 ## Pregunta 2 — Concentración geográfica de la cartera
 
@@ -37,14 +46,25 @@ Cuenta cuántos clientes hay en cada país y muestra únicamente aquellos paíse
 **Consulta:**
 
 ```sql
-
+SELECT
+	COUNTRY AS PAIS,
+	COUNT(CUSTOMER_ID) AS NUM_CLIENTES,
+	COUNT(CITY) AS NUM_CIUDADES
+FROM
+	CUSTOMERS
+GROUP BY
+	COUNTRY
+HAVING
+	COUNT(CUSTOMER_ID) >= 5
+ORDER BY
+	NUM_CLIENTES DESC;
 ```
 
 **Resultado:**
 
-!Resultado pregunta 7
+![alt text](img\pregunta-2.png)
 
-**Comentario:** He usado `COUNT(o.order_id)` en lugar de `COUNT(*)` porque...
+**Comentario:** He agrupado por país con GROUP BY y contado los clientes y ciudades con COUNT. Por último, usé HAVING, ya que use GROUP BY para que despues de agruparlo por paises mostrara solo los que tengan mas de 5 client, ademas use ORDER BY DESC para ordenarlo de mayor a menor.
 
 ## Pregunta 3 — Alerta de reposición
 
@@ -62,14 +82,27 @@ Localiza los productos activos cuyas unidades en stock sean **inferiores o igual
 **Consulta:**
 
 ```sql
-
+SELECT
+	PRODUCT_NAME AS PRODUCTO,
+	UNITS_IN_STOCK AS STOCK,
+	REORDER_LEVEL AS NIVEL_REPOSICION,
+	UNITS_ON_ORDER AS PEDIDO_A_PROVEEDOR,
+	CASE
+		WHEN UNITS_IN_STOCK = 0 THEN 'CRÍTICO'
+		ELSE 'AVISO'
+	END AS SITUACION
+FROM
+	PRODUCTS
+WHERE
+	DISCONTINUED = 0
+	AND UNITS_IN_STOCK <= REORDER_LEVEL;
 ```
 
 **Resultado:**
 
-!Resultado pregunta 7
+![alt text](img\pregunta-3.png)
 
-**Comentario:** He usado `COUNT(o.order_id)` en lugar de `COUNT(*)` porque...
+**Comentario:** He filtrado con discontinued = 0 para ver solo los activos y he comparado directamente units_in_stock <= reorder_level para sacar los que tienen poco stock. Por último, añadí un CASE WHEN para ponerle la etiqueta 'CRÍTICO' a los que están a 0 y 'AVISO' a los demás.
 
 ## Pregunta 4 — Ficha completa de producto
 
