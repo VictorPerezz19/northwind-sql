@@ -62,7 +62,7 @@ ORDER BY
 
 **Resultado:**
 
-![alt text](img\pregunta-2.png)
+![alt text](img/pregunta-2.png)
 
 **Comentario:** He agrupado por país con GROUP BY y contado los clientes y ciudades con COUNT. Por último, usé HAVING, ya que use GROUP BY para que despues de agruparlo por paises mostrara solo los que tengan mas de 5 client, ademas use ORDER BY DESC para ordenarlo de mayor a menor.
 
@@ -100,7 +100,7 @@ WHERE
 
 **Resultado:**
 
-![alt text](img\pregunta-3.png)
+![alt text](img/pregunta-3.png)
 
 **Comentario:** He usado discontinued = 0 para ver solo los activos y he comparado units_in_stock <= reorder_level para sacar los que tienen poco stock. Por último, añadí un CASE WHEN para ponerle la etiqueta 'CRÍTICO' a los que están a 0 y 'AVISO' a los demás.
 
@@ -139,7 +139,7 @@ ORDER BY
 
 **Resultado:**
 
-![alt text](img\pregunta-4.png)
+![alt text](img/pregunta-4.png)
 
 **Comentario:** He usado INNER JOIN para unir tres tablas: products como tabla central, conectándola con categories (para sacar el nombre de la categoría) y con suppliers (para sacar los datos del proveedor y el país). Para filtrar los países de golpe usé WHERE, IN, y finalmente ordené por país y luego por producto con ORDER BY.
 
@@ -181,7 +181,7 @@ WHERE
 
 **Resultado:**
 
-![alt text](img\pregunta-5.png)
+![alt text](img/pregunta-5.png)
 
 **Comentario:** He unido 4 tablas usando INNER JOIN y USING para no usar el ON ya que las claves se llaman igual en ambas tablas. Para evitar errores, le he puesto el alias od a unit_price, porque esa columna existe tanto en productos como en detalles del pedido y SQL necesita saber cuál coger. El importe de la línea lo saqué multiplicando el precio por la cantidad y restándole el descuento (1 - descuento), redondeando el resultado final a dos decimales, utilice, a parte de esto he especificado od.unit_price en lugar de poner solo unit_price. Esto es vital porque la base de datos guarda el precio actual en la tabla products y el precio histórico en la tabla order_details. Si indico de qué tabla sacar el precio od me sale un error de duplicado de tablas, además, utilice od ya que se refiere a un precio de hace tiempo, no acctual sino habría utilizado p (el uso de numeric y de round lo explico en los ejercicios anteriores).
 
@@ -223,7 +223,7 @@ ORDER BY
 
 **Resultado:**
 
-![alt text](img\pregunta-6.png)
+![alt text](img/pregunta-6.png)
 
 **Comentario:** He unido las tablas de categorías, productos y detalles de pedidos usando USING. Agrupé por categoría para poder calcular la facturación con SUM, y usé COUNT(DISTINCT od.product_id) para contar solo los productos diferentes vendidos, sin repetir. Para filtrar las que superan los 100.000€, tuve que copiar lo mismo en el HAVING. Por ultimo hice un ORDER BY de mayor a menor facturación.  
 
@@ -260,7 +260,7 @@ ORDER BY
 
 **Resultado:**
 
-![alt text](img\pregunta-7.png)
+![alt text](img/pregunta-7.png)
 
 **Comentario:** He usado LEFT JOIN para traerme los clientes, hayan comprado o no. Aunque esto genera valores null, utilizando COUNT(o.order_id) hago que los nulos se conviertan en un 0. Para sacar el último pedido usé MAX(o.order_date) y le añadí ::text para convertir esa fecha en texto; así, COALESCE me deja ocultar el nulo sobrescribiéndolo con la frase 'SIN PEDIDOS' sin dar error de tipos. Por último, usé ORDER BY num_pedidos ASC para que los de 0 salgan arriba del todo, esto se puede hacer tambien con CASE WHEN pero con COALESCE es mas rapido.
 
@@ -295,7 +295,7 @@ FROM
 
 **Resultado:**
 
-![alt text](img\pregunta-8.png)
+![alt text](img/pregunta-8.png)
 
 **Comentario:** Para esta consulta he hecho un SELF JOIN, crucé la tabla employees consigo misma, las he unido igualando e.reports_to con j.employee_id. He usado LEFT JOIN para que el jefe supremo no desaparezca al no tener a nadie por encima. Para juntar el nombre y el apellido he usado el operador ||, y he envuelto los datos del jefe en un COALESCE para que, cuando devuelva nulo, escriba 'DIRECCIÓN GENERAL'.
 
@@ -363,7 +363,7 @@ ORDER BY
 
 **Resultado:**
 
-![alt text](img\pregunta-9.png)
+![alt text](img/pregunta-9.png)
 
 **Comentario:** Primero, he creado usado CROSS JOIN en la tabla de categorías y consulta que saca los 3 años distintos usando EXTRACT(YEAR FROM) Esto genera 8 categorías × 3 años. Después, he calculado la facturación haciendo una subconsulta llamada ventas. Finalmente luego he usado el LEFT JOIN. Al hacerlo en este orden, las combinaciones que no tuvieron ventas se quedan con la celda vacía (NULL), por eso hago el COALESCE para que no desaparezcan los que tengan null.
 
@@ -407,7 +407,7 @@ ORDER BY
 
 **Resultado:**
 
-![alt text](img\pregunta-10.png)
+![alt text](img/pregunta-10.png)
 
 **Comentario:** Hicé un FULL JOIN para conservar todos los países. use COALESCE(c.country, p.country) para coger el nombre del país sin importar de qué subconsulta venga, evitando que el campo quede vacío, y usé la misma función para convertir los conteos nulos en ceros. Por último, utilicé un CASE WHEN que dice de qué lado falta el país (IS NULL) para etiquetar automáticamente el tipo de presencia como 'SOLO CLIENTES', 'SOLO PROVEEDORES' o 'AMBOS'. Se podria haber hecho sin el FULL JOIN pero habría tenido que usar COUNT DISTINCT.
 
@@ -462,7 +462,7 @@ ORDER BY
 
 **Resultado:**
 
-![alt text](img\pregunta-11.png)
+![alt text](img/pregunta-11.png)
 
 **Comentario:** he hecho tres consultas independientes utilizando UNION ALL. Entonces puse como textos ('CLIENTE', 'PROVEEDOR' o 'NORTHWIND TRADERS') directamente en el SELECT para generar las columnas que faltaban, y he usado UPPER() junto con la concatenación || el formato del contacto en los empleados. Es necesario usar el UNION ALL en lugar del UNION estándar porque este último rastrea y elimina filas duplicadas de forma automática. Si dos personas distintas se llamaran igual, estuvieran en la misma ciudad y compartieran empresa, un UNION normal asumiría que es un error y borraría a una de ellas, haciendo que perdamos datos.
 
@@ -502,7 +502,7 @@ ORDER BY
 
 **Resultado:**
 
-![alt text](img\pregunta-12A.png)
+![alt text](img/pregunta-12A.png)
 
 **Consulta B:**
 
@@ -522,7 +522,7 @@ ORDER BY
 
 **Resultado:**
 
-![alt text](img\pregunta-12B.png)
+![alt text](img/pregunta-12B.png)
 
 **Comentario:** Para resolver el apartado A he usado EXCEPT, que extrae la lista de países de los clientes y le elimina cualquier país que aparezca en la lista de proveedores, dejando solo los que no coinciden. Para el apartado B he usado INTERSECT, que compara ambas listas pero devuelve únicamente los países que están presentes en las dos a la vez. El A se podria haber realizado con LEFT JOIN, intentando buscarle un proveedor a cada cliente. Si no lo encuentra, deja la parte del proveedor en NULL. El WHERE filtra para quedarse solo con esos clientes huérfanos de proveedor, y finalmente el DISTINCT agrupa los países para que no salgan repetidos, el code habría sido mas largo que usando solo EXCEPT.
 
@@ -571,7 +571,7 @@ ORDER BY
 
 **Resultado:**
 
-![alt text](img\pregunta-13.png)
+![alt text](img/pregunta-13.png)
 
 **Comentario:** para seafood he utlizado el NOT EXISTS. Primero agrupo a los clientes y cuento todos sus pedidos usando un LEFT JOIN para no perder a los que tienen 0 pedidos. Luego, el WHERE NOT EXISTS filtra la lista descartando a cualquiera que haya comprado pescado.
 El NOT EXISTS hace que por cada cliente que intenta entrar en tu reporte final, el portero ejecuta la subconsulta interna y pregunta: "¿Hay al menos un registro de la categoría Seafood asociado a este cliente?".
@@ -632,7 +632,7 @@ ORDER BY
 
 **Resultado:**
 
-![alt text](img\pregunta-14.png)
+![alt text](img/pregunta-14.png)
 
 **Comentario:** He resuelto la consulta haciendo esta subconsulta (SELECT AVG(unit_price) FROM products), que calcula la media de todo el catálogo sin importar si están descatalogados o no. Como esta subconsulta devuelve un único valor matemático, se puede tratar como un número y colocar directamente en el WHERE para filtrar qué productos superan el corte, y en el SELECT para mostrar el dato estático y calcular la resta de la diferencia.
 
@@ -685,7 +685,7 @@ LIMIT
 
 **Resultado:**
 
-![alt text](img\pregunta-15.png)
+![alt text](img/pregunta-15.png)
 
 **Comentario:** Primero, calculo el coste total exacto de cada pedido sumando sus líneas y agrupando por order_id. Le he asignado  el alias totales a este bloque para que PostgreSQL no devuelva error. Luego, cruzo estos tickets ya cerrados con la tabla de clientes. Al tener el importe del pedido como un solo bloque, ahora es correcto aplicar COUNT para el volumen, SUM para el total y AVG para el ticket medio real. Por último, un ORDER BY DESC seguido de LIMIT 15 recorta el resultado para entregar únicamente el segmento premium de la cartera.
 
@@ -740,7 +740,7 @@ ORDER BY
 
 **Resultado:**
 
-![alt text](img\pregunta-16.png)
+![alt text](img/pregunta-16.png)
 
 **Comentario:** He resuelto la consulta utilizando dos subconsultas correlacionadas, enlazando el category_id de la consulta principal con el de las internas. En el WHERE, he comprobado fila a fila si el precio del producto evaluado coincide con el precio máximo exclusivo de su propia categoría, filtrando así al más caro. Simultáneamente, en el SELECT, introduzco otra subconsulta correlacionada para calcular en tiempo real la media de esa misma categoría. Aplicar esta técnica sobre una tabla de diez millones de filas hundiría el rendimiento por completo, el motor de la base de datos se vería obligado a ejecutar un monton de micro-consultas internas, por lo que en escenarios de Big Data reales esto se resolvería utilizando funciones de ventana para hacer el cálculo en una sola pasada.
 
@@ -818,7 +818,7 @@ ORDER BY
 
 **Resultado:**
 
-![alt text](img\pregunta-17.png)
+![alt text](img/pregunta-17.png)
 
 **Comentario:** He utilizado para encadenar el proceso paso a paso de forma secuencial. Primero calculo la facturación de cada cliente despues, utilizo la función de ventana NTILE(4) OVER para ordenar a esos clientes de mayor a menor ingreso y cortarlos automáticamente en cuatro grupos exactos. A continuación, he cruzado este resultado con la facturación global de la compañía para tener una base sobre la que calcular los porcentajes. Finalmente, en la consulta principal, el CASE WHEN transforma los números del 1 al 4 en las etiquetas de segmento requeridas, agrupando el resultado final mediante COUNT y SUM para obtener las métricas resumidas.
 
@@ -895,7 +895,7 @@ ORDER BY
 
 **Resultado:**
 
-![alt text](img\pregunta-18.png)
+![alt text](img/pregunta-18.png)
 
 **Comentario:** He estructurado la solución usando dos CTE encadenadas para poder filtrar el podio, ya que, como indica la pista, SQL evalúa el WHERE antes que las funciones de ventana y daría error si intentamos filtrar ahí directamente. En la primera CTE calculo el total de ventas por producto, y en la segunda aplico las ventanas: uso DENSE_RANK() OVER (PARTITION BY categoria ORDER BY facturacion DESC) para generar un ranking que se reinicia al cambiar de familia, y el mismo comando sin PARTITION BY para calcular el puesto global de la compañía. Respecto a la duda de la pista, he elegido DENSE_RANK() porque si dos productos empatan en facturación, ambos compartirán medalla y el siguiente producto será el 3; si usara RANK() el siguiente saltaría al 4, y si usara ROW_NUMBER() el empate se desempataría de forma aleatoria, lo cual sería injusto para un reporte de compras.
 
@@ -979,7 +979,7 @@ ORDER BY
 
 **Resultado:**
 
-![alt text](img\pregunta-19.png)
+![alt text](img/pregunta-19.png)
 
 **Comentario:** He resuelto el ejercicio utilizando dos CTE encadenadas para separar el cálculo de la facturación base de las operaciones analíticas. En la segunda CTE, el total acumulado funciona perfectamente solo con SUM() OVER (ORDER BY mes) porque asume por defecto todo el histórico previo, pero para la media móvil he tenido que definir el marco estricto con ROWS BETWEEN 2 PRECEDING AND CURRENT ROW para limitar el alcance a tres meses. Para la comparativa, he empleado la función LAG() que saca el dato de la fila anterior, lo que permite calcular la variación porcentual en el SELECT final; he optado por dejar el mes anterior y la variación de enero en NULL, ya que inventar un dato sin tener el cierre de diciembre de 1996 rompería la lógica matemática del cuadro de mando.
 
@@ -1063,6 +1063,6 @@ ORDER BY
 
 **Resultado:**
 
-![alt text](img\pregunta-20.png)
+![alt text](img/pregunta-20.png)
 
 **Comentario:** En la CTE aplico la cláusula ROLLUP sobre las categorías para generar una fila extra al final con la suma de todo, cogiendo su nombre nulo con un COALESCE para etiquetarla como 'TOTAL'. Despues use FILTER (WHERE...) para calcular el peso de cada año de forma independiente. En la consulta principal calculo el porcentaje de peso utilizando una función de ventana (MAX(total) OVER()) que coge el número de la fila 'TOTAL' generada por el ROLLUP, y añado un bloque CASE WHEN para la tendencia.
