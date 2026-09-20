@@ -27,7 +27,7 @@ ORDER BY
 
 **Resultado:**
 
-![imagen resultado](img\pregunta-1.png)
+![imagen resultado](img/pregunta-1.png)
 
 **Comentario:** He usado ROUND(::numeric, 2) para redondear a dos decimales y cambiar el tipo y discontinued = 0 para ver si esta descatalogado. Para el rango de precios usé BETWEEN y ORDER BY DESC para ordenarlo de mayor a menor.
 
